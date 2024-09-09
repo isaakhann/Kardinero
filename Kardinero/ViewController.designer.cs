@@ -17,6 +17,9 @@ namespace Kardinero
 
 		[Outlet]
 		AppKit.NSButton findInfo { get; set; }
+
+		[Outlet]
+		AppKit.NSButtonCell getCSV { get; set; }
 		
 		void ReleaseDesignerOutlets ()
 		{
@@ -28,6 +31,11 @@ namespace Kardinero
 			if (findInfo != null) {
 				findInfo.Dispose ();
 				findInfo = null;
+			}
+
+			if (getCSV != null) {
+				getCSV.Dispose ();
+				getCSV = null;
 			}
 		}
 	}

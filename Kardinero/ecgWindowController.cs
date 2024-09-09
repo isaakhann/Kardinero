@@ -292,4 +292,3 @@ public static class NSImageExtensions
         }
     }
 }
-

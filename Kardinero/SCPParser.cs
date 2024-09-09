@@ -92,7 +92,7 @@ public class SCPParser
 
         // Define how many leads are expected
         const int numLeads = 8; // For example: I, II, V1, V2, V3, V4, V5, V6
-        const int expectedLength = 10000; // Adjust this to your expected minimum file size
+        const int expectedLength = 100; // Adjust this to your expected minimum file size
 
         // Check if the file has sufficient length
         if (fileBytes.Length < expectedLength)

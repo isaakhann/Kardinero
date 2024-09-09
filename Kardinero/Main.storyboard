@@ -385,6 +385,7 @@
                                                     </constraints>
                                                     <accessibility identifier="SettingsButton"/>
                                                     <connections>
+                                                        <action selector="getCSV:" target="XfG-lQ-9wD" id="O2c-Ea-fF9"/>
                                                         <segue destination="7X2-ED-PYP" kind="show" id="P9N-OD-zij"/>
                                                     </connections>
                                                 </button>
@@ -462,6 +463,7 @@
                     <connections>
                         <outlet property="addFileButton" destination="1PR-qb-1Fn" id="WZm-NC-xzC"/>
                         <outlet property="findInfo" destination="ms8-Zb-rZb" id="Zjj-1i-OIN"/>
+                        <outlet property="getCSV" destination="MOb-Y9-wek" id="vwC-nV-Izh"/>
                         <outlet property="infoButton" destination="ms8-Zb-rZb" id="NLt-lY-lL6"/>
                     </connections>
                 </viewController>
@@ -512,6 +514,6 @@
         <image name="download" width="200" height="189"/>
         <image name="openFile" width="204" height="192"/>
         <image name="person" width="165" height="148"/>
-        <image name="settings" width="200" height="146"/>
+        <image name="settings" width="185" height="174"/>
     </resources>
 </document>

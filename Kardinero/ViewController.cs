@@ -18,7 +18,7 @@ public partial class ViewController : NSViewController
         base.ViewDidLoad();
         addFileButton.Activated += OnAddFileButtonClicked;
         findInfo.Activated += OnInfoButtonClicked;
-
+        getCSV.Activated += onCSVButtonClicked;
     }
 
 
@@ -32,6 +32,126 @@ public partial class ViewController : NSViewController
             // Update the view, if already loaded.
         }
     }
+    private void onCSVButtonClicked(object sender, EventArgs e) {
+        var dialog = new NSOpenPanel
+        {
+            Title = "Choose a .scp file",
+            AllowedFileTypes = new string[] { "scp" },
+            AllowsMultipleSelection = false
+        };
+
+        if (dialog.RunModal() == 1) // 1 is the "OK" button's return value
+        {
+            var url = dialog.Url;
+            if (url != null)
+            {
+                try
+                {
+                    // SCPParser class to parse the SCP file
+                    SCPParser scpParser = new SCPParser();
+
+                    // Extract patient information
+                    string patientInfo = scpParser.ExtractInfoFromScp(url.Path);
+
+                    // Extract the first name from patient info
+                    string firstName = ExtractFirstName(patientInfo);
+
+                    // Read file data
+                    byte[] fileData = File.ReadAllBytes(url.Path);
+
+                    // Extract ECG data
+                    var ecgData = scpParser.ExtractEcgData(fileData);
+
+                    // Calculate derived leads (III, aVR, aVL, aVF)
+                    var fullEcgData = CalculateDerivedLeads(ecgData);
+
+                    // Convert to CSV format
+                    string csvString = ConvertToCSV(patientInfo, fullEcgData);
+
+                    // Save CSV
+                    var saveDialog = new NSSavePanel
+                    {
+                        Title = "Save CSV File",
+                        AllowedFileTypes = new string[] { "csv" },
+                        NameFieldStringValue = $"{firstName}.csv" // Set the default filename
+                    };
+
+                    if (saveDialog.RunModal() == 1 && saveDialog.Url != null)
+                    {
+                        File.WriteAllText(saveDialog.Url.Path, csvString);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error parsing SCP file or writing CSV: " + ex.Message);
+                }
+            }
+        }
+    }
+
+    // Method to extract the first name from patient information
+    private string ExtractFirstName(string patientInfo)
+    {
+        var lines = patientInfo.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var nameLine = lines.FirstOrDefault(line => line.StartsWith("Name:"));
+        if (nameLine != null)
+        {
+            var nameComponents = nameLine.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (nameComponents.Length > 1)
+            {
+                return nameComponents[1]; // Assuming the first name is the second word
+            }
+        }
+        return "Patient";
+    }
+
+    // Method to calculate derived leads
+    private int[][] CalculateDerivedLeads(int[][] ecgData)
+    {
+        var fullEcgData = ecgData.ToList();
+
+        var leadI = ecgData[0];
+        var leadII = ecgData[1];
+
+        // Calculate Lead III = Lead II - Lead I
+        var leadIII = leadII.Zip(leadI, (ii, i) => ii - i).ToArray();
+
+        // Calculate aVR = -(Lead I + Lead II) / 2
+        var aVR = leadI.Zip(leadII, (i, ii) => -(i + ii) / 2).ToArray();
+
+        // Calculate aVL = (Lead I - Lead III) / 2
+        var aVL = leadI.Zip(leadIII, (i, iii) => (i - iii) / 2).ToArray();
+
+        // Calculate aVF = (Lead II + Lead III) / 2
+        var aVF = leadII.Zip(leadIII, (ii, iii) => (ii + iii) / 2).ToArray();
+
+        // Append derived leads to the full ECG data
+        fullEcgData.Add(leadIII);
+        fullEcgData.Add(aVR);
+        fullEcgData.Add(aVL);
+        fullEcgData.Add(aVF);
+
+        return fullEcgData.ToArray();
+    }
+
+    // Method to convert patient info and ECG data to a CSV string
+    private string ConvertToCSV(string patientInfo, int[][] ecgData)
+    {
+        string csv = patientInfo + "\n";
+        csv += "CH1,CH2,CH3,CH4,CH5,CH6,CH7,CH8,CH9,CH10,CH11,CH12\n";  // Adjusted header labels
+
+        int maxLength = ecgData.Max(lead => lead.Length);
+
+        for (int i = 0; i < maxLength; i++)
+        {
+            var row = ecgData.Select(lead => i < lead.Length ? lead[i].ToString() : "").ToArray();
+            csv += string.Join(",", row) + "\n";
+        }
+
+        return csv;
+    }
+
+
     private void OnAddFileButtonClicked(object sender, EventArgs e)
     {
         var openPanel = NSOpenPanel.OpenPanel;
